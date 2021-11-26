@@ -19,16 +19,16 @@ DOWNLOAD = 'You can download data as a <b>"Map"</b>, <b>"Shapefile"</b> or <b>"G
            'to delete all your data, <b>"Back>>"</b> to return to the previous step.'
 COLLECT = 'Click <b>"Collect"</b> to start collecting data or <b>"Back>>"</b> to return to the fist step.'
 POINT = 'Enter coordinates of your point using native Telegram <b>"Location"</b> function, ' \
-              'choose the <b>"Send My Current Location"</b> option.\n\nYou also can enter coordinates manually, ' \
-              'using the following template: <i>45.3456, 75.5634</i>, where the first digit is ' \
-              'Latitude, the second one is Longitude.The number of decimal places ' \
-              'can be any.\n\nSpatial Reference: WGS84\nCoordinate System: Geographical'
+        'choose the <b>"Send My Current Location"</b> option.\n\nYou also can enter coordinates manually, ' \
+        'using the following template: <i>45.3456, 75.5634</i>, where the first digit is ' \
+        'Latitude, the second one is Longitude.The number of decimal places ' \
+        'can be any.\n\nSpatial Reference: WGS84\nCoordinate System: Geographical'
 POLYGON = 'Enter coordinates of vertices of your polygon using native ' \
-                'Telegram <b>"Location"</b> function, choose the <b>"Send My Current Location"</b> option.' \
-                '\n\nYou also can enter coordinates manually, using the following template: <i>45.3456, 75.5634</i>, ' \
-                'where the first digit is Latitude, the second one is Longitude.' \
-                'The number of decimal places can be any.\n\nWhen coordinates of all vertices have been entered, ' \
-                'click <b>"Done"</b>.\n\nSpatial Reference: WGS84\nCoordinate System: Geographical'
+          'Telegram <b>"Location"</b> function, choose the <b>"Send My Current Location"</b> option.' \
+          '\n\nYou also can enter coordinates manually, using the following template: <i>45.3456, 75.5634</i>, ' \
+          'where the first digit is Latitude, the second one is Longitude.' \
+          'The number of decimal places can be any.\n\nWhen coordinates of all vertices have been entered, ' \
+          'click <b>"Done"</b>.\n\nSpatial Reference: WGS84\nCoordinate System: Geographical'
 GEOM = 'Choose geometry: <b>"Point"</b> or <b>"Polygon"</b>'
 VERTICES = 'Number of entered vertices is %d. Minimum is 4. Continue to enter coordinates'
 COORD_NS = 'Coordinates were not saved, use the Location function at the appropriate step'
