@@ -1,15 +1,11 @@
-INTRO1 = 'Hi, <b>%s</b>.\n\nMy name is <i>Spatial Survey Bot</i>, ' \
-         'I use pre-created Surveys to collect coordinates of spatial objects, their text and media description. ' \
-         'Collected data can be viewed as a Web Map, downloaded as a Shapefile/GeoJSON and then can be used in ' \
-         'any GIS software.\nOnly the creator of a Survey can view/download data, whereas participants ' \
-         'can only collect it.\n\nIf you know the name of a Survey, please enter it below. If not, you can ' \
-         '<b>"Create Survey"</b> and share it with your participants.\nTo reset the bot, click/type /start at ' \
+INTRO1 = 'Hi, <b>%s</b>.\n\nIf you know the name of a Survey, please enter it below. If not, you can ' \
+         '<b>"Create Survey"</b> and share it with your participants.\n\nTo reset the bot, click/type /start at ' \
          'any stage.'
-INTRO2 = 'Returned to the first step. If you know the name of a Survey, please enter it below. If not, ' \
-         'you can <b>"Create Survey"</b> and share it with your participants.\nTo reset the bot, ' \
+INTRO2 = 'Returned to the first step.\n\nIf you know the name of a Survey, please enter it below. If not, ' \
+         'you can <b>"Create Survey"</b> and share it with your participants.\n\nTo reset the bot, ' \
          'click/type /start at any stage.'
 INTRO3 = 'Returned to the first step, the last entry was lost.\n\nIf you know the name of a Survey,' \
-         'please enter it below. If not, you can <b>"Create Survey"</b> and share it with your participants.\n' \
+         'please enter it below. If not, you can <b>"Create Survey"</b> and share it with your participants.\n\n' \
          'To reset the bot, click/type /start at any stage.'
 NAME_CREATE = 'Enter your Survey name or <b>"Create Survey"</b>.'
 NOT_EXIST = 'The entered Survey does not exist, try once again or <b>Create Survey</b>.'
