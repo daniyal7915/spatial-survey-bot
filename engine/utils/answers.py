@@ -1,4 +1,4 @@
-INTRO1 = 'Hi, <b>%s</b>.\n\nMy name is <i>Geospatial Survey WebBot</i>, ' \
+INTRO1 = 'Hi, <b>%s</b>.\n\nMy name is <i>Spatial Survey Bot</i>, ' \
          'I use pre-created Surveys to collect coordinates of spatial objects, their text and media description. ' \
          'Collected data can be viewed as a Web Map, downloaded as a Shapefile/GeoJSON and then can be used in ' \
          'any GIS software.\nOnly the creator of a Survey can view/download data, whereas participants ' \
