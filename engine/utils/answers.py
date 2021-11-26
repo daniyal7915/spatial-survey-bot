@@ -1,10 +1,10 @@
-INTRO1 = 'Hi, <b>%s</b>.\n\nIf you know the name of a Survey, please enter it below. If not, you can ' \
+INTRO1 = 'Hi, <b>%s</b>.\nIf you know the name of a Survey, please enter it below. If not, you can ' \
          '<b>"Create Survey"</b> and share it with your participants.\n\nTo reset the bot, click/type /start at ' \
          'any stage.'
-INTRO2 = 'Returned to the first step.\n\nIf you know the name of a Survey, please enter it below. If not, ' \
+INTRO2 = 'Returned to the first step.\nIf you know the name of a Survey, please enter it below. If not, ' \
          'you can <b>"Create Survey"</b> and share it with your participants.\n\nTo reset the bot, ' \
          'click/type /start at any stage.'
-INTRO3 = 'Returned to the first step, the last entry was lost.\n\nIf you know the name of a Survey,' \
+INTRO3 = 'Returned to the first step, the last entry was lost.\nIf you know the name of a Survey,' \
          'please enter it below. If not, you can <b>"Create Survey"</b> and share it with your participants.\n\n' \
          'To reset the bot, click/type /start at any stage.'
 NAME_CREATE = 'Enter your Survey name or <b>"Create Survey"</b>.'
