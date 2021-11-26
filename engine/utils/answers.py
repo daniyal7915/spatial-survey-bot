@@ -3,7 +3,8 @@ INTRO1 = 'Hi, <b>%s</b>.\n\nMy name is <i>Spatial Survey Bot</i>, ' \
          'Collected data can be viewed as a Web Map, downloaded as a Shapefile/GeoJSON and then can be used in ' \
          'any GIS software.\nOnly the creator of a Survey can view/download data, whereas participants ' \
          'can only collect it.\n\nIf you know the name of a Survey, please enter it below. If not, you can ' \
-         '<b>"Create Survey"</b> and share it with your participants.'
+         '<b>"Create Survey"</b> and share it with your participants.\n\nTo reset the bot click/type /start at ' \
+         'any stage'
 INTRO2 = 'Returned to the first step. If you know the name of a Survey, please enter it below. If not, ' \
          'you can <b>"Create Survey"</b> and share it with your participants.'
 INTRO3 = 'Returned to the first step, the last entry was lost.\n\nIf you know the name of a Survey,' \
@@ -66,7 +67,8 @@ POLYGON_MEDIA = 'The polygon was saved.\nDo you want to attach photo or video?'
 
 
 MEDIA_SAVED = 'Your %s was saved. Do you want to attach another %s or %s?'
-MEDIA_NS = 'Your %s was not saved due to a mistake at the media hosting. Do you want to attach another %s or %s?'
+MEDIA_NS = 'Your %s was not saved due to a mistake at the media hosting. Probably your file is too large.\n' \
+           'Do you want to attach another %s or %s?'
 SURVEY_SAVED = 'Survey <i>%s</i> was saved. Remember its name, its required for the access to ' \
                'the Survey.\n\nEnter the first survey question.'
 Q_SAVED = 'Your question "%s" was saved. Click <b>"Next"</b>, <b>"Done"</b> or <b>"Delete"</b>'
