@@ -5,22 +5,15 @@ from tests.utils.data import Data
 
 class Message(Data):
     num = 0
-    text = 'survey'
+    text = ''
 
     @property
     def message(self):
-        if self.text == 'survey':
-            return DotDict({'from_user': DotDict({'id': self.num, 'first_name': f'Name{self.num}'}),
-                            'text': f'{self.text}{self.num}',
-                            'location': DotDict({'latitude': self.data_point_polygon_location[0],
-                                                 'longitude': self.data_point_polygon_location[1]}),
-                            'survey': f'survey{self.num}'})
-        else:
-            return DotDict({'from_user': DotDict({'id': self.num, 'first_name': f'Name{self.num}'}),
-                            'text': f'{self.text}',
-                            'location': DotDict({'latitude': self.data_point_polygon_location[0],
-                                                 'longitude': self.data_point_polygon_location[1]}),
-                            'survey': f'survey{self.num}'})
+        return DotDict({'from_user': DotDict({'id': self.num, 'first_name': f'Name{self.num}'}),
+                        'text': f'{self.text}',
+                        'location': DotDict({'latitude': self.data_point_polygon_location[0],
+                                             'longitude': self.data_point_polygon_location[1]}),
+                        'survey': f'survey{self.num}'})
 
 
 class TestID:
@@ -57,16 +50,15 @@ class ShpProcess:
 
 
 class MockResponse:
-    data = [{'src': 'https://telegra.ph/test_path'}]
+    correct = [{'src': 'https://telegra.ph/test_path'}]
+    wrong = [{'error': 'https://telegra.ph/test_path'}]
 
     def __init__(self, status=None):
         self.status_code = status
 
     def json(self):
         if self.status_code == 200:
-            return self.data
+            return self.correct
 
-
-
-
-
+    def set_wrong(self):
+        self.correct = self.wrong

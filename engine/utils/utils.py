@@ -1,3 +1,6 @@
+import re
+
+
 def credentials(db_url):
     transit1 = db_url.split('/')
     transit2 = transit1[2].split('@')
@@ -15,6 +18,10 @@ class DotDict(dict):
 
 
 class ProcessData:
+    def sub(self, text):
+        pattern = re.compile(r"'")
+        return pattern.sub('`', text)
+
     @property
     def states(self):
         return {'INIT': 1, 'SURVEY1': 2, 'SURVEY2': 3, 'SURVEY3': 4, 'COLLECT': 5, 'POINT': 6, 'POLYGON': 7,
@@ -30,4 +37,3 @@ class ProcessData:
     def datum(self):
         return 'GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137,298.257223563]],' \
                'PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]]'
-

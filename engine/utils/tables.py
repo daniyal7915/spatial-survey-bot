@@ -13,16 +13,16 @@ class Tables:
         self.db = db
 
     def create(self):
-        self.cursor.execute(f"create table if not exists {self.db}user_state (user_id int PRIMARY KEY, user_name text, "
-                            f"user_state int, survey text)")
+        self.cursor.execute(f"create table if not exists {self.db}user_state (user_id int PRIMARY KEY, "
+                            f"user_name text, user_state int, survey varchar(25))")
         self.cursor.execute(f"create table if not exists {self.db}features (id serial PRIMARY KEY, user_id int, "
-                            f"user_name text, survey text, entr_time timestamp, photo text, video text, "
+                            f"user_name text, survey varchar(25), entr_time timestamp, photo text, video text, "
                             f"point geometry(POINT, 4326), polygon geometry(POLYGON, 4326), poly_points text, "
                             f"q_count int, ans_check int)")
-        self.cursor.execute(f"create table if not exists {self.db}questions (id serial PRIMARY KEY, survey text, "
-                            f"author int, question text)")
+        self.cursor.execute(f"create table if not exists {self.db}questions (id serial PRIMARY KEY, "
+                            f"survey varchar(25), author int, question varchar(50))")
         self.cursor.execute(f"create table if not exists {self.db}answers (id serial PRIMARY KEY, f_id int, "
-                            f"q_id int, answer text)")
+                            f"q_id int, answer varchar(255))")
         self.connection.commit()
 
     def drop(self):

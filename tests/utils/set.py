@@ -18,7 +18,7 @@ class SetTestData(Message):
         connection.commit()
 
     def set_features_answers(self):
-        user_id = [self.user_id, self.user_id, self.user_id + 1, self.user_id +2]
+        user_id = [self.user_id, self.user_id, self.user_id + 1, self.user_id + 2]
         user_name = [f'Name{user_id[0]}', f'Name{user_id[1]}', f'Name{user_id[2]}', f'Name{user_id[3]}']
         time = '2021-11-20 22:45:00'
         photo = [f'https://telegra.ph/test_path_photo{user_id[0]}', 'null',
@@ -60,7 +60,3 @@ class SetTestData(Message):
         self.set_questions()
         self.set_features_answers()
         self.correct_features()
-
-
-
-

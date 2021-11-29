@@ -52,7 +52,7 @@ class TestState(TestCase, Message, Result):
         self.assertEqual(cursor.fetchall()[0][0], self.result_states['SUBMIT'])
 
 
-class SurveyTest(TestCase, Message):
+class SurveyTest(TestCase, Message, Result):
     def test_save_survey(self):
         self.num = 4
 
@@ -60,10 +60,14 @@ class SurveyTest(TestCase, Message):
                        f"'{self.message.from_user.first_name}')")
         connection.commit()
 
-        survey.save_survey(self.message)
-
-        cursor.execute(f"select survey from test_user_state where user_id = {self.message.from_user.id}")
-        self.assertEqual(cursor.fetchall()[0][0], self.message.text)
+        for i in range(1, 10):
+            self.text = f"{self.message.survey}'" * i
+            if 0 < i < 4:
+                survey.save_survey(self.message)
+                cursor.execute(f"select survey from test_user_state where user_id = {self.message.from_user.id}")
+                self.assertEqual(cursor.fetchall()[0][0], self.result_save_survey[i])
+            else:
+                self.assertTrue(survey.save_survey(self.message))
 
     def test_get_survey(self):
         self.num = 5
@@ -72,7 +76,7 @@ class SurveyTest(TestCase, Message):
                        f"'{self.message.survey}')")
         connection.commit()
 
-        self.assertEqual(survey.get_survey(self.message), self.message.text)
+        self.assertEqual(survey.get_survey(self.message), self.message.survey)
 
     @mock.patch('engine.process.Survey.get_survey')
     def test_get_author(self, get_survey):
@@ -89,11 +93,12 @@ class SurveyTest(TestCase, Message):
     def test_survey_initial(self):
         self.num = 7
 
-        self.assertEqual(survey.survey_initial(self.message), answers['SURVEY_SAVED'] % self.message.survey)
+        self.text = f"{self.message.survey}'"
+        self.assertEqual(survey.survey_initial(self.message), answers['SURVEY_SAVED'] % f'{self.message.survey}`')
 
         cursor.execute(f"select survey, author, question from test_questions where id = (select max(id) from "
-                       f"test_questions where survey = '{self.message.survey}')")
-        self.assertEqual(cursor.fetchall()[0], (self.message.survey, self.message.from_user.id, None))
+                       f"test_questions where survey = '{self.message.survey}`')")
+        self.assertEqual(cursor.fetchall()[0], (f'{self.message.survey}`', self.message.from_user.id, None))
 
     @mock.patch('engine.process.Survey.get_survey')
     def test_survey_next(self, get_survey):
@@ -114,14 +119,20 @@ class SurveyTest(TestCase, Message):
     def test_survey_check(self):
         self.num = 9
 
-        cursor.execute(f"insert into test_questions(survey, author, question) values('{self.message.survey}', "
+        cursor.execute(f"insert into test_questions(survey, author, question) values('{self.message.survey}`', "
                        f"{self.message.from_user.id}, 'question{self.num}')")
         connection.commit()
 
+        self.text = f"{self.message.survey}'"
+
         self.assertTrue(survey.survey_check(self.message))
 
-        cursor.execute(f"delete from test_questions where survey = '{self.message.survey}'")
+        cursor.execute(f"delete from test_questions where survey = '{self.message.survey}`'")
         connection.commit()
+
+        self.assertFalse(survey.survey_check(self.message))
+
+        self.text = self.text * 4
 
         self.assertFalse(survey.survey_check(self.message))
 
@@ -170,26 +181,38 @@ class QuestionAnswerTest(TestCase, Message, Result):
     @mock.patch('engine.process.Survey.get_survey')
     def test_question_insert(self, get_survey):
         self.num = 12
-        self.text = f'question{self.num}'
 
         get_survey.return_value = self.message.survey
+
+        self.text = f"question{self.num}'"
 
         cursor.execute(f"insert into test_questions (id, survey, author) values (default, '{self.message.survey}',"
                        f"{self.message.from_user.id})")
         connection.commit()
 
-        self.assertEqual(qa.question_insert(self.message), answers['Q_SAVED'] % self.message.text)
+        self.assertEqual(qa.question_insert(self.message), answers['Q_SAVED'] % f'{self.message.text[:-1]}`')
 
         cursor.execute(f"select question from test_questions where id = (select max(id) from "
                        f"test_questions where survey = '{self.message.survey}')")
-        self.assertEqual(cursor.fetchall()[0][0], self.message.text)
+        self.assertEqual(cursor.fetchall()[0][0], f'{self.message.text[:-1]}`')
+
+        self.assertFalse(qa.question_insert(self.message))
+
+        self.text = self.text * 5
+
+        cursor.execute(f"update test_questions set question = null where id = (select max(id) from test_questions "
+                       f"where survey = '{self.message.survey}')")
+        connection.commit()
+
+        self.assertEqual(qa.question_insert(self.message), answers['LONG'])
 
     @mock.patch('engine.process.Survey.get_survey')
     def test_question_null(self, get_survey):
         self.num = 13
-        self.text = f'question{self.num}'
 
         get_survey.return_value = self.message.survey
+
+        self.text = f'question{self.num}'
 
         cursor.execute(f"insert into test_questions (id, survey, author, question) values (default, "
                        f"'{self.message.survey}', {self.message.from_user.id}, '{self.message.text}')")
@@ -249,10 +272,11 @@ class QuestionAnswerTest(TestCase, Message, Result):
     @mock.patch('engine.process.Survey.get_survey')
     def test_answer_insert(self, get_survey, q_count):
         self.num = 17
-        self.text = f'answer{self.num}'
 
         q_count.side_effect = self.data_answer_insert[0]
         get_survey.return_value = self.message.survey
+
+        self.text = f"answer{self.num}'"
 
         cursor.execute(f"insert into test_features (id, user_id, survey) values (default, {self.message.from_user.id}, "
                        f"'{self.message.survey}')")
@@ -262,11 +286,27 @@ class QuestionAnswerTest(TestCase, Message, Result):
         connection.commit()
 
         self.assertEqual(qa.answer_insert(self.message, self.data_answer_insert[1][0]),
-                         answers['ANS_NEXT_Q'] % f'question{self.num}_{self.result_answer_insert[0]}')
+                         answers['ANS_NEXT_Q'] % f'question{self.num}_{self.result_answer_insert[0][0]}')
         self.assertEqual(qa.answer_insert(self.message, self.data_answer_insert[1][1]),
-                         answers['ANS_NEXT_Q'] % f'question{self.num}_{self.result_answer_insert[1]}')
+                         answers['ANS_NEXT_Q'] % f'question{self.num}_{self.result_answer_insert[0][1]}')
         self.assertEqual(qa.answer_insert(self.message, self.data_answer_insert[1][2]),
                          answers['ALL_ANSWERED'])
+
+        cursor.execute(f"select answer from test_answers where f_id = "
+                       f"(select max(id) from test_features where user_id = {self.message.from_user.id}) order by id")
+        self.assertEqual(cursor.fetchall(), self.result_answer_insert[1])
+
+        cursor.execute(f"select q_id from test_answers where f_id = "
+                       f"(select max(id) from test_features where user_id = {self.message.from_user.id}) order by id")
+        q_id_answers = cursor.fetchall()
+        cursor.execute(f"select id from test_questions where survey = '{self.message.survey}' order by id")
+        id_questions = cursor.fetchall()
+
+        self.assertEqual(q_id_answers, id_questions)
+
+        self.text = self.text * 40
+
+        self.assertEqual(qa.answer_insert(self.message), answers['LONG'])
 
 
 class CoordTest(TestCase, Message, Result):
@@ -335,8 +375,10 @@ class CoordTest(TestCase, Message, Result):
                 self.assertEqual(coord.point_manual(self.message), answers['INVALID_COORD'])
             elif i == 4:
                 self.assertEqual(coord.point_manual(self.message), answers['INVALID_LAT'])
-            else:
+            elif i == 5:
                 self.assertEqual(coord.point_manual(self.message), answers['INVALID_LONG'])
+            else:
+                self.assertEqual(coord.point_manual(self.message), answers['LONG'])
 
     def test_point_location(self):
         self.num = 21
@@ -369,8 +411,10 @@ class CoordTest(TestCase, Message, Result):
                 self.assertEqual(coord.polygon_manual(self.message), answers['INVALID_COORD'])
             elif i == 4:
                 self.assertEqual(coord.polygon_manual(self.message), answers['INVALID_LAT'])
-            else:
+            elif i == 5:
                 self.assertEqual(coord.polygon_manual(self.message), answers['INVALID_LONG'])
+            else:
+                self.assertEqual(coord.polygon_manual(self.message), answers['LONG'])
 
     @mock.patch('engine.process.Coord.append_poly_points')
     def test_polygon_location(self, poly_points):
@@ -397,6 +441,7 @@ class CoordTest(TestCase, Message, Result):
 class MediaTest(TestCase, Message, Result):
     def test_save_media(self):
         self.num = 25
+
         path = self.data_save_media
 
         cursor.execute(f"insert into test_features (id, user_id) values (default, {self.message.from_user.id})")
@@ -435,14 +480,24 @@ class MediaTest(TestCase, Message, Result):
 
         mocked.getcode.return_value = 200
         post.return_value = MockResponse(200)
+
         self.assertEqual(media.media_path(token, file_info, m_type), self.result_media_path)
 
         mocked.getcode.return_value = 200
         post.return_value = MockResponse()
+
         self.assertFalse(media.media_path(token, file_info, m_type))
 
         mocked.getcode.return_value = 404
         post.return_value = MockResponse(200)
+
+        self.assertFalse(media.media_path(token, file_info, m_type))
+
+        crushed = MockResponse(200)
+        crushed.set_wrong()
+        mocked.getcode.return_value = 200
+        post.return_value = crushed
+
         self.assertFalse(media.media_path(token, file_info, m_type))
 
 

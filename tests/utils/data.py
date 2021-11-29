@@ -81,7 +81,8 @@ class Data:
 
     @property
     def data_point_polygon_manual(self):
-        return ['12345 qwerty', '12345, qwerty', '-89, 179', '91, -181', '91, 179', '0, 181']
+        return ['12345 qwerty', '12345, qwerty', '-89, 179', '91, -181', '91, 179', '0, 181',
+                '1234567890' * 6]
 
     @property
     def data_point_polygon_location(self):
@@ -446,6 +447,11 @@ class Result:
                 'count': 2}
 
     @property
+    def result_save_survey(self):
+        return [None, f'survey{self.num}`', f'survey{self.num}`survey{self.num}`',
+                f'survey{self.num}`survey{self.num}`survey{self.num}`']
+
+    @property
     def result_credentials(self):
         return {'NAME': 'test_db', 'USER': 'bot', 'PASSWORD': '1234', 'HOST': 'localhost', 'PORT': '5432'}
 
@@ -481,7 +487,7 @@ class Result:
 
     @property
     def result_answer_insert(self):
-        return [2, 3]
+        return [[2, 3], [('answer17`_1',), ('answer17`_2',), ('answer17`_3',)]]
 
     @property
     def result_get_pp(self):

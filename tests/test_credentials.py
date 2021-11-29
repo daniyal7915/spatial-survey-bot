@@ -10,6 +10,3 @@ class CredentialsTest(TestCase, Data, Result):
 
 if __name__ == "__main__":
     main()
-
-
-

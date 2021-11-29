@@ -16,8 +16,10 @@ webmap, gjson_shp = CreateWebMap(), CreateGJsonShp()
 
 
 @bot.message_handler(commands=['start'])
-def init_handler(message):
+def command_handler(message):
     ans = answers['INTRO2']
+    markup = telebot.types.InlineKeyboardMarkup()
+    markup.add(telebot.types.InlineKeyboardButton('Create Survey', callback_data='create survey'))
 
     if state.show_state(message) in [state.states['SURVEY1'], state.states['SURVEY3'], state.states['RESULT'],
                                      state.states['CHECK2'], state.states['COLLECT']]:
@@ -47,10 +49,6 @@ def init_handler(message):
         state.save_state(message, state.states['SURVEY1'])
         ans = answers['INTRO3']
 
-    markup = telebot.types.InlineKeyboardMarkup()
-
-    markup.add(telebot.types.InlineKeyboardButton('Create Survey', callback_data='create survey'))
-
     bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
 
 
@@ -65,44 +63,44 @@ def callback_handler(call):
 
 
 @bot.message_handler(func=lambda message: state.show_state(message) == state.states['SURVEY1'])
-def code1_handler(message):
+def message_handler(message):
+    ans = answers['VIEW']
+    markup = telebot.types.InlineKeyboardMarkup()
+
     if survey.survey_check(message):
         survey.save_survey(message)
         state.save_state(message, state.states['SURVEY3'])
         if survey.get_author(message) == message.from_user.id:
-            ans = answers['VIEW']
-            markup = telebot.types.InlineKeyboardMarkup()
             markup.add(telebot.types.InlineKeyboardButton('View', callback_data='view'),
                        telebot.types.InlineKeyboardButton('Collect', callback_data='collect'),
                        telebot.types.InlineKeyboardButton('Back>>', callback_data='back>>'))
-            bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
         else:
             ans = answers['COLLECT']
-            markup = telebot.types.InlineKeyboardMarkup()
             markup.add(telebot.types.InlineKeyboardButton('Collect', callback_data='collect'),
                        telebot.types.InlineKeyboardButton('Back>>', callback_data='back>>'))
-            bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
     else:
         ans = answers['NOT_EXIST']
-        markup = telebot.types.InlineKeyboardMarkup()
         markup.add(telebot.types.InlineKeyboardButton('Create Survey', callback_data='create survey'))
-        bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
+
+    bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
 
 
 @bot.message_handler(func=lambda message: state.show_state(message) == state.states['SURVEY2'])
-def code2_handler(message):
+def message_handler(message):
+    ans = answers['EXIST']
+
     if not survey.survey_check(message):
         if len(message.text) < 4:
             ans = answers['MIN_SYMBOL']
-            bot.reply_to(message, ans)
         else:
-            state.save_state(message, state.states['QUESTION1'])
-            ans = survey.survey_initial(message)
-            survey.save_survey(message)
-            bot.send_message(message.chat.id, ans, parse_mode='HTML')
-    else:
-        ans = answers['EXIST']
-        bot.send_message(message.chat.id, ans)
+            ans = answers['LONG']
+            if survey.save_survey(message):
+                pass
+            else:
+                state.save_state(message, state.states['QUESTION1'])
+                ans = survey.survey_initial(message)
+
+    bot.send_message(message.chat.id, ans, parse_mode='HTML')
 
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['SURVEY3'])
@@ -136,28 +134,31 @@ def callback_handler(call):
             bot.send_message(call.message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
     elif call.data == 'back>>':
         state.save_state(call, state.states['SURVEY1'])
+        ans = answers['INTRO2']
         markup = telebot.types.InlineKeyboardMarkup()
         markup.add(telebot.types.InlineKeyboardButton('Create Survey', callback_data='create survey'))
-        bot.send_message(call.message.chat.id, answers['INTRO2'], parse_mode='HTML', reply_markup=markup)
+        bot.send_message(call.message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
 
 
 @bot.message_handler(func=lambda message: state.show_state(message) == state.states['QUESTION1'])
-def question1_handler(message):
+def message_handler(message):
     ans = qa.question_insert(message)
+    markup = None
 
-    state.save_state(message, state.states['QUESTION2'])
-
-    markup = telebot.types.InlineKeyboardMarkup()
-
-    markup.add(telebot.types.InlineKeyboardButton('Next', callback_data='next'),
-               telebot.types.InlineKeyboardButton('Done', callback_data='done'),
-               telebot.types.InlineKeyboardButton('Delete', callback_data='delete'))
+    if ans == answers['LONG']:
+        pass
+    else:
+        state.save_state(message, state.states['QUESTION2'])
+        markup = telebot.types.InlineKeyboardMarkup()
+        markup.add(telebot.types.InlineKeyboardButton('Next', callback_data='next'),
+                   telebot.types.InlineKeyboardButton('Done', callback_data='done'),
+                   telebot.types.InlineKeyboardButton('Delete', callback_data='delete'))
 
     bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['QUESTION2'])
-def callback_handler(call):
+def message_handler(call):
     bot.answer_callback_query(call.id)
 
     if call.data == 'done':
@@ -170,12 +171,12 @@ def callback_handler(call):
         survey.survey_next(call)
         state.save_state(call, state.states['QUESTION1'])
         ans = answers['NEXT_Q']
-        bot.send_message(call.message.chat.id, ans)
+        bot.send_message(call.message.chat.id, ans, parse_mode='HTML')
     elif call.data == 'delete':
         qa.question_null(call)
         state.save_state(call, state.states['QUESTION1'])
         ans = answers['DELETED1']
-        bot.send_message(call.message.chat.id, ans)
+        bot.send_message(call.message.chat.id, ans, parse_mode='HTML')
 
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['COLLECT'])
@@ -184,24 +185,26 @@ def callback_handler(call):
 
     if call.data == 'point':
         state.save_state(call, state.states['POINT'])
-        bot.send_message(call.message.chat.id, answers['POINT'], parse_mode='HTML')
+        ans = answers['POINT']
+        bot.send_message(call.message.chat.id, ans, parse_mode='HTML')
     elif call.data == 'polygon':
         state.save_state(call, state.states['POLYGON'])
-        bot.send_message(call.message.chat.id, answers['POLYGON'], parse_mode='HTML')
+        ans = answers['POLYGON']
+        bot.send_message(call.message.chat.id, ans, parse_mode='HTML')
 
 
 @bot.message_handler(func=lambda message: state.show_state(message) == state.states['POINT'])
-def point_handler(message):
+def message_handler(message):
     ans = coord.point_manual(message)
+    markup = None
 
     if ans[-1] == '?':
         state.save_state(message, state.states['TRANSIT'])
         markup = telebot.types.InlineKeyboardMarkup()
         markup.add(telebot.types.InlineKeyboardButton('Yes', callback_data='yes'),
                    telebot.types.InlineKeyboardButton('No', callback_data='no'))
-        bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
-    else:
-        bot.send_message(message.chat.id, ans, parse_mode='HTML')
+
+    bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['POLYGON'])
@@ -217,15 +220,14 @@ def callback_handler(call):
         bot.send_message(call.message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
     elif call.data == 'done' and coord.get_count(call) < 4:
         ans = answers['VERTICES'] % coord.get_count(call)
-        bot.send_message(call.message.chat.id, ans)
+        bot.send_message(call.message.chat.id, ans, parse_mode='HTML')
 
 
 @bot.message_handler(func=lambda message: state.show_state(message) == state.states['POLYGON'])
-def polygon_handler(message):
+def message_handler(message):
     ans = coord.polygon_manual(message)
 
     markup = telebot.types.InlineKeyboardMarkup()
-
     markup.add(telebot.types.InlineKeyboardButton('Done', callback_data='done'))
 
     bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
@@ -233,21 +235,21 @@ def polygon_handler(message):
 
 @bot.message_handler(content_types=['location'])
 def location_handler(message):
+    ans = answers['COORD_NS']
+    markup = None
+
     if state.show_state(message) == state.states['POINT']:
         state.save_state(message, state.states['TRANSIT'])
         ans = coord.point_location(message)
         markup = telebot.types.InlineKeyboardMarkup()
         markup.add(telebot.types.InlineKeyboardButton('Yes', callback_data='yes'),
                    telebot.types.InlineKeyboardButton('No', callback_data='no'))
-        bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
     elif state.show_state(message) == state.states['POLYGON']:
         ans = coord.polygon_location(message)
         markup = telebot.types.InlineKeyboardMarkup()
         markup.add(telebot.types.InlineKeyboardButton('Done', callback_data='done'))
-        bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
-    else:
-        ans = answers['COORD_NS']
-        bot.send_message(message.chat.id, ans)
+
+    bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['TRANSIT'])
@@ -265,52 +267,47 @@ def callback_handler(call):
 
 
 @bot.message_handler(func=lambda message: state.show_state(message) == state.states['MEDIA1'])
-def media_handler(message):
-    ans = answers['INVALID']
-
-    bot.send_message(message.chat.id, ans)
+def message_handler(message):
+    bot.send_message(message.chat.id, answers['INVALID'])
 
 
 @bot.message_handler(content_types=['photo'])
 def photo_handler(message):
+    ans = answers['PHOTO_NS']
+    markup = None
+
     try:
         if state.show_state(message) == state.states['MEDIA1']:
-            try:
-                path = media.media_path(token, bot.get_file(message.photo[-1].file_id), 'image/jpeg')
-            except:
-                path = None
+            path = media.media_path(token, bot.get_file(message.photo[-1].file_id), 'image/jpeg')
             state.save_state(message, state.states['MEDIA2'])
             ans = media.save_media(message, path, 'photo')
             markup = telebot.types.InlineKeyboardMarkup()
             markup.add(telebot.types.InlineKeyboardButton('Yes', callback_data='yes'),
                        telebot.types.InlineKeyboardButton('No', callback_data='no'))
-            bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
-        else:
-            ans = answers['PHOTO_NS']
-            bot.send_message(message.chat.id, ans)
+
     except psycopg2.ProgrammingError:
         pass
+
+    bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
 
 
 @bot.message_handler(content_types=['video'])
 def video_handler(message):
+    ans = answers['VIDEO_NS']
+    markup = None
+
     try:
         if state.show_state(message) == state.states['MEDIA1']:
-            try:
-                path = media.media_path(token, bot.get_file(message.video.file_id), 'video/mp4')
-            except:
-                path = None
+            path = media.media_path(token, bot.get_file(message.video.file_id), 'video/mp4')
             state.save_state(message, state.states['MEDIA2'])
             ans = media.save_media(message, path, 'video')
             markup = telebot.types.InlineKeyboardMarkup()
             markup.add(telebot.types.InlineKeyboardButton('Yes', callback_data='yes'),
                        telebot.types.InlineKeyboardButton('No', callback_data='no'))
-            bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
-        else:
-            ans = answers['VIDEO_NS']
-            bot.send_message(message.chat.id, ans)
     except psycopg2.ProgrammingError:
         pass
+
+    bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['MEDIA2'])
@@ -328,18 +325,17 @@ def callback_handler(call):
 
 
 @bot.message_handler(func=lambda message: state.show_state(message) == state.states['ANSWER'])
-def answer_handler(message):
+def message_handler(message):
     ans = qa.answer_insert(message)
-    original = answers['ALL_ANSWERED']
+    markup = None
 
-    if ans == original:
+    if ans == answers['ALL_ANSWERED']:
         state.save_state(message, state.states['SUBMIT'])
         markup = telebot.types.InlineKeyboardMarkup()
         markup.add(telebot.types.InlineKeyboardButton('Submit', callback_data='submit'),
                    telebot.types.InlineKeyboardButton('Delete', callback_data='delete'))
-        bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
-    else:
-        bot.send_message(message.chat.id, ans, parse_mode='HTML')
+
+    bot.send_message(message.chat.id, ans, parse_mode='HTML', reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['CHECK1'])

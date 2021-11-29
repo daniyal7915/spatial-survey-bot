@@ -38,14 +38,17 @@ class State:
         connection.commit()
 
 
-class Survey:
+class Survey(ProcessData):
     def __init__(self, db=''):
         self.db = db
 
     def save_survey(self, message):
-        cursor.execute(f"update {self.db}user_state set survey = '{message.text.lower()}' where "
-                       f"user_id = {message.from_user.id}")
-        connection.commit()
+        if len(message.text) > 25:
+            return True
+        else:
+            cursor.execute(f"update {self.db}user_state set survey = '{self.sub(message.text.lower())}' where "              
+                           f"user_id = {message.from_user.id}")
+            connection.commit()
 
     def get_survey(self, message):
         cursor.execute(f"select survey from {self.db}user_state where user_id = {message.from_user.id}")
@@ -56,11 +59,11 @@ class Survey:
         return cursor.fetchall()[0][0]
 
     def survey_initial(self, message):
-        cursor.execute(f"insert into {self.db}questions (id, survey, author) values (default, '{message.text.lower()}',"
-                       f"{message.from_user.id})")
+        cursor.execute(f"insert into {self.db}questions (id, survey, author) values (default, "
+                       f"'{self.sub(message.text.lower())}', {message.from_user.id})")
         connection.commit()
 
-        return answers['SURVEY_SAVED'] % message.text
+        return answers['SURVEY_SAVED'] % self.sub(message.text)
 
     def survey_next(self, message):
         cursor.execute(f"select question from {self.db}questions where id = (select max(id) from {self.db}questions "
@@ -71,8 +74,11 @@ class Survey:
             connection.commit()
 
     def survey_check(self, message):
-        cursor.execute(f"select exists (SELECT 1 FROM {self.db}questions WHERE survey = '{message.text.lower()}' "
-                       f"LIMIT 1)")
+        if len(message.text) > 25:
+            return
+
+        cursor.execute(f"select exists (SELECT 1 FROM {self.db}questions WHERE "
+                       f"survey = '{self.sub(message.text.lower())}' LIMIT 1)")
         return cursor.fetchall()[0][0]
 
 
@@ -114,13 +120,17 @@ class QuestionAnswer(Survey, PointPolygon):
         connection.commit()
 
     def question_insert(self, message):
+        if len(message.text) > 50:
+            return answers['LONG']
+
         cursor.execute(f"select question from {self.db}questions where id = (select max(id) from {self.db}questions "
                        f"where survey = '{self.get_survey(message)}')")
         if cursor.fetchall()[0][0] is None:
-            cursor.execute(f"update {self.db}questions set question = '{message.text}' where id = (select max(id) "
-                           f"from {self.db}questions where survey = '{self.get_survey(message)}')")
+            cursor.execute(f"update {self.db}questions set question = '{self.sub(message.text)}' "
+                           f"where id = (select max(id) from {self.db}questions where "
+                           f"survey = '{self.get_survey(message)}')")
             connection.commit()
-            return answers['Q_SAVED'] % message.text
+            return answers['Q_SAVED'] % self.sub(message.text)
 
     def question_null(self, message):
         cursor.execute(f"update {self.db}questions set question = null where id = (select max(id) from "
@@ -149,25 +159,25 @@ class QuestionAnswer(Survey, PointPolygon):
         connection.commit()
 
     def answer_insert(self, message, ans_num=''):
-        q_count = self.get_q_count(message)
-
-        cursor.execute(f"select id, question from {self.db}questions where survey = '{self.get_survey(message)}' "
-                       f"order by id")
-        result = cursor.fetchall()
-
-        cursor.execute(f"insert into {self.db}answers (id, f_id, q_id, answer) values (default, "
-                       f"(select max(id) from {self.db}features where user_id = {message.from_user.id}),"
-                       f"{result[q_count * (- 1)][0]}, '{message.text}{ans_num}')")
-        connection.commit()
-
-        if q_count > 1:
-            cursor.execute(
-                f"update {self.db}features set q_count = {q_count - 1} where id = (select max(id) from "
-                f"{self.db}features where user_id = {message.from_user.id})")
-            connection.commit()
-            return answers['ANS_NEXT_Q'] % result[(q_count - 1) * (-1)][1]
+        if len(message.text) > 255:
+            return answers['LONG']
         else:
-            return answers['ALL_ANSWERED']
+            q_count = self.get_q_count(message)
+            cursor.execute(f"select id, question from {self.db}questions where survey = '{self.get_survey(message)}' "
+                           f"order by id")
+            result = cursor.fetchall()
+            cursor.execute(f"insert into {self.db}answers (id, f_id, q_id, answer) values (default, "
+                           f"(select max(id) from {self.db}features where user_id = {message.from_user.id}),"
+                           f"{result[q_count * (- 1)][0]}, '{self.sub(message.text)}{ans_num}')")
+            connection.commit()
+            if q_count > 1:
+                cursor.execute(
+                    f"update {self.db}features set q_count = {q_count - 1} where id = (select max(id) from "
+                    f"{self.db}features where user_id = {message.from_user.id})")
+                connection.commit()
+                return answers['ANS_NEXT_Q'] % result[(q_count - 1) * (-1)][1]
+            else:
+                return answers['ALL_ANSWERED']
 
 
 class Coord:
@@ -198,30 +208,32 @@ class Coord:
             return 0
 
     def point_manual(self, message):
-        try:
-            lat, long = message.text.lower().split(',')
-            lat, long = float(lat), float(long)
-            if -90 <= lat <= 90 and -180 <= long <= 180:
-                time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                cursor.execute(f"update {self.db}features set point = ST_GeomFromText("
-                               f"'POINT({long} {lat})',4326), entr_time = '{time}'"
-                               f"where id = (select max(id) from {self.db}features where "
-                               f"user_id = {message.from_user.id})")
-                connection.commit()
-                return answers['POINT_MEDIA'] % (lat, long)
-            elif not -90 <= lat <= 90 and not -180 <= long <= 180:
-                return answers['INVALID_COORD']
-            elif not -90 <= lat <= 90:
-                return answers['INVALID_LAT']
-            else:
-                return answers['INVALID_LONG']
-        except ValueError:
-            return answers['FOLLOW_TEMPLATE']
+        if len(message.text) > 25:
+            return answers['LONG']
+        else:
+            try:
+                lat, long = message.text.lower().split(',')
+                lat, long = float(lat), float(long)
+                if -90 <= lat <= 90 and -180 <= long <= 180:
+                    time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    cursor.execute(f"update {self.db}features set point = ST_GeomFromText("
+                                   f"'POINT({long} {lat})',4326), entr_time = '{time}'"
+                                   f"where id = (select max(id) from {self.db}features where "
+                                   f"user_id = {message.from_user.id})")
+                    connection.commit()
+                    return answers['POINT_MEDIA'] % (lat, long)
+                elif not -90 <= lat <= 90 and not -180 <= long <= 180:
+                    return answers['INVALID_COORD']
+                elif not -90 <= lat <= 90:
+                    return answers['INVALID_LAT']
+                else:
+                    return answers['INVALID_LONG']
+            except ValueError:
+                return answers['FOLLOW_TEMPLATE']
 
     def point_location(self, message):
         lat = message.location.latitude
         long = message.location.longitude
-
         time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         cursor.execute(f"update {self.db}features set point = ST_GeomFromText("
@@ -232,20 +244,23 @@ class Coord:
         return answers['POINT_MEDIA'] % (lat, long)
 
     def polygon_manual(self, message):
-        try:
-            lat, long = message.text.lower().split(',')
-            lat, long = float(lat), float(long)
-            if -90 <= lat <= 90 and -180 <= long <= 180:
-                self.append_poly_points(message, lat, long)
-                return answers['VERTEX_DONE']
-            elif not -90 <= lat <= 90 and not -180 <= long <= 180:
-                return answers['INVALID_COORD']
-            elif not -90 <= lat <= 90:
-                return answers['INVALID_LAT']
-            else:
-                return answers['INVALID_LONG']
-        except ValueError:
-            return answers['FOLLOW_TEMPLATE']
+        if len(message.text) > 25:
+            return answers['LONG']
+        else:
+            try:
+                lat, long = message.text.lower().split(',')
+                lat, long = float(lat), float(long)
+                if -90 <= lat <= 90 and -180 <= long <= 180:
+                    self.append_poly_points(message, lat, long)
+                    return answers['VERTEX_DONE']
+                elif not -90 <= lat <= 90 and not -180 <= long <= 180:
+                    return answers['INVALID_COORD']
+                elif not -90 <= lat <= 90:
+                    return answers['INVALID_LAT']
+                else:
+                    return answers['INVALID_LONG']
+            except ValueError:
+                return answers['FOLLOW_TEMPLATE']
 
     def polygon_location(self, message):
         lat = message.location.latitude
@@ -260,7 +275,6 @@ class Coord:
             poly_points.append(poly_points[0])
 
         vertices = ','.join(poly_points)
-
         time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         cursor.execute(f"update {self.db}features set polygon = ST_GeomFromText("
@@ -290,11 +304,14 @@ class Media:
             return answers['MEDIA_NS'] % (media, media, other_media)
 
     def media_path(self, token, file_info, m_type):
-        with urllib.request.urlopen(f'https://api.telegram.org/file/bot{token}/{file_info.file_path}') as get:
-            if get.getcode() == 200:
-                post = requests.post('https://telegra.ph/upload', files={'file': ('file', get, m_type)})
-                if post.status_code == 200:
-                    return post.json()[0]['src']
+        try:
+            with urllib.request.urlopen(f'https://api.telegram.org/file/bot{token}/{file_info.file_path}') as get:
+                if get.getcode() == 200:
+                    post = requests.post('https://telegra.ph/upload', files={'file': ('file', get, m_type)})
+                    if post.status_code == 200:
+                        return post.json()[0]['src']
+        except:
+            pass
 
 
 class Shp(PointPolygon, TestID):
