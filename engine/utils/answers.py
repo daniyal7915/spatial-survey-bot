@@ -91,7 +91,7 @@ INVALID_LAT = 'Invalid Latitude! It must be between -90\u00b0 and 90\u00b0'
 
 INVALID_LONG = 'Invalid Longitude, It must be between -180\u00b0 and 180\u00b0'
 
-FOLLOW_TEMPLATE = 'Invalid input! Follow the template: 45, 45 (where the first digit is Latitude,' \
+FOLLOW_TEMPLATE = 'Invalid input! Follow the template: 45, 45 (where the first digit is Latitude, ' \
                   'the second one is Longitude.'
 
 VERTEX_DONE = 'Enter coordinates of another vertex or click <b>"Done"</b>'
