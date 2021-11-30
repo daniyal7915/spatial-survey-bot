@@ -4,7 +4,12 @@ from engine.utils.utils import credentials
 
 
 class Tables:
+    """Tables creation"""
+
+    # Get the database string from the environment variable, convert it into the proper format
     cred = credentials(os.environ['DATABASE_URL'])
+
+    # Database connection
     connection = psycopg2.connect(database=cred['NAME'], user=cred['USER'], password=cred['PASSWORD'],
                                   host=cred['HOST'], port=cred['PORT'])
     cursor = connection.cursor()

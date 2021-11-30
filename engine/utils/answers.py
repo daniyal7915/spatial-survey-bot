@@ -1,3 +1,5 @@
+# The bot answers
+
 INTRO1 = 'Hi, <b>%s</b>.\nIf you know the name of a Survey, please enter it below. If not, you can ' \
          '<b>"Create Survey"</b> and share it with your participants.\n\nTo reset the bot, click/type /start at ' \
          'any stage.'
