@@ -30,7 +30,7 @@ NO_DATA = 'No data to view, click <b>"Collect"</b> to collect data, <b>"Back>>"<
 DOWNLOAD = 'You can download data as a <b>"Map"</b>, <b>"Shapefile"</b> or <b>"GeoJSON"</b>. <b>"Delete"</b> ' \
            'to delete all your data, <b>"Back>>"</b> to return to the previous step.'
 
-COLLECT = 'Click <b>"Collect"</b> to start collecting data or <b>"Back>>"</b> to return to the fist step.'
+COLLECT = 'Click <b>"Collect"</b> to start collecting data or <b>"Back>>"</b> to return to the first step.'
 
 POINT = 'Enter coordinates of your point using native Telegram <b>"Location"</b> function, ' \
         'choose the <b>"Send My Current Location"</b> option.\n\nYou also can enter coordinates manually, ' \
@@ -89,7 +89,7 @@ INVALID_COORD = 'Invalid Latitude and Longitude, they must be between -90\u00b0 
 
 INVALID_LAT = 'Invalid Latitude! It must be between -90\u00b0 and 90\u00b0'
 
-INVALID_LONG = 'Invalid Longitude, It must be between -180\u00b0 and 180\u00b0'
+INVALID_LONG = 'Invalid Longitude! It must be between -180\u00b0 and 180\u00b0'
 
 FOLLOW_TEMPLATE = 'Invalid input! Follow the template: 45, 45 (where the first digit is Latitude, ' \
                   'the second one is Longitude.'
@@ -103,7 +103,7 @@ MEDIA_SAVED = 'Your %s was saved. Do you want to attach another %s or %s?'
 MEDIA_NS = 'Your %s was not saved due to a mistake at the media hosting. Probably your file is too large.\n' \
            'Do you want to attach another %s or %s?'
 
-SURVEY_SAVED = 'Survey <i>%s</i> was saved. Remember its name, its required for the access to ' \
+SURVEY_SAVED = 'Survey <i>%s</i> was saved. Remember its name, it is required for the access to ' \
                'the Survey.\n\nEnter the first survey question.'
 
 Q_SAVED = 'Your question "%s" was saved. Click <b>"Next"</b>, <b>"Done"</b> or <b>"Delete"</b>'
