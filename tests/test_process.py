@@ -8,17 +8,23 @@ from tests.utils.utils import ShpProcess, MockResponse, Message
 from tests.utils.data import Data, Result
 
 
+# Drop and create tables in the testing mode
 tables = Tables('test_')
 tables.drop()
 tables.create()
 
+# The database connection
 connection = tables.connection
 cursor = tables.cursor
 
+# Instances of process classes in the testing mode
 state, delete, survey = State('test_'), Delete('test_'), Survey('test_')
 coord, media, qa = Coord('test_'), Media('test_'), QuestionAnswer('test_')
 pp, webmap, gjson_shp = PointPolygon(), CreateWebMap('test_'), CreateGJsonShp('test_')
 gjson, shp = GeoJson('test_'), Shp('test_')
+
+
+# Tests, covering all methods in process.py
 
 
 class TestState(TestCase, Message, Result):

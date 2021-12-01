@@ -1,12 +1,16 @@
 from engine.utils.tables import Tables
 from tests.utils.utils import Message
 
+
+# The database connection in the testing mode
 tables = Tables('test_')
 connection = tables.connection
 cursor = tables.cursor
 
 
 class SetTestData(Message):
+    """Fill up test tables with data required
+       for testing in test_process.py"""
     user_id = 0
     survey = None
 

@@ -3,6 +3,7 @@ from engine.utils.utils import DotDict
 
 
 class Data:
+    """Container with the input data for test_process.py"""
     num = 0
 
     @property
@@ -435,6 +436,8 @@ class Data:
 
 
 class Result:
+    """Container with the result data for the comparison
+       in test_process.py"""
     num = 0
 
     @property
