@@ -28,7 +28,7 @@ def command_handler(message):
        in all other cases directly return to the first step (SURVEY1 state) from any stage. All not yet
        submitted changes will be lost.
 
-       Send the proper answer and the 'Create Survey' markup."""
+       Send the assigned answer and the 'Create Survey' markup."""
     ans = answers['INTRO2']
     markup = telebot.types.InlineKeyboardMarkup()
     markup.add(telebot.types.InlineKeyboardButton('Create Survey', callback_data='create survey'))
@@ -68,8 +68,8 @@ def command_handler(message):
 def callback_handler(call):
     """If the bot state for a message/call sender is SURVEY1.
 
-       if call.data is 'create survey', switch to Survey2 state and send
-       the prompt to enter a Survey name."""
+       if call.data is 'create survey', switch to SURVEY2 state and send
+       the assigned answer."""
     bot.answer_callback_query(call.id)
 
     if call.data == 'create survey':
@@ -80,13 +80,14 @@ def callback_handler(call):
 
 @bot.message_handler(func=lambda message: state.show_state(message) == state.states['SURVEY1'])
 def message_handler(message):
-    """If the bot bot state for a message/call sender is SURVEY1.
+    """If the bot state for a message/call sender is SURVEY1.
 
-       if an entered survey name exists, switch to SURVEY3 state, if the sender is
-       the creator of the survey, send the proper answer and the 'View, Collect, Back>>' markup,
-       otherwise send the proper answer and the 'Collect, Back>>' markup.
+       if an entered survey name exists, switch to SURVEY3 state.
+           if the sender is the survey creator, send the assigned answer and
+           the 'View, Collect, Back>>' markup.
+           else, send the assigned answer and the 'Collect, Back>>' markup.
 
-       Else, send the proper answer, the 'Create Survey' markup and stay at the current state."""
+       else, send the assigned answer and the 'Create Survey' markup."""
     ans = answers['VIEW']
     markup = telebot.types.InlineKeyboardMarkup()
 
@@ -112,10 +113,10 @@ def message_handler(message):
 def message_handler(message):
     """If the bot state for a message/call sender is SURVEY2.
 
-        If an entered survey name does not exist. Validate it, switch to the QUESTION1 state,
-        save the name. Send the proper answer.
+       if an entered survey name does not exist. Validate it,
+       switch to the QUESTION1 state, save the name. Send the assigned answer.
 
-        Else, send the proper answer and stay at the current state. """
+       else, send the assigned answer. """
     ans = answers['EXIST']
 
     if not survey.survey_check(message):
@@ -134,6 +135,19 @@ def message_handler(message):
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['SURVEY3'])
 def callback_handler(call):
+    """If the bot state for a message/call sender is SURVEY3.
+
+       if call.data is 'collect', switch to the 'COLLECT' state, insert a new row into
+       the features table, send the assigned answer and the 'Point, Polygon' markup.
+
+       elif call.data is 'view' and a message/call sender is the survey creator.
+           if there is submitted data, switch to the 'Result' state, send the assigned answer and
+           the 'Map, Shapefile, GeoJSON, Delete, Back >>' markup.
+           else, no data has been submitted, send the assigned answer and the 'Collect, Back>>' markup.
+
+       elif call.data is 'back>>', switch to the SURVEY1 state, send the assigned answer and
+       the 'Create Survey' markup"""
+
     bot.answer_callback_query(call.id)
 
     markup = telebot.types.InlineKeyboardMarkup()
@@ -169,6 +183,10 @@ def callback_handler(call):
 
 @bot.message_handler(func=lambda message: state.show_state(message) == state.states['QUESTION1'])
 def message_handler(message):
+    """If the bot state for a message/call sender is QUESTION1.
+
+       Validate the message, save the question, switch to the QUESTION2 state,
+       send the assigned answer and the 'Next, Done. Delete' markup"""
     ans = qa.question_insert(message)
     markup = telebot.types.InlineKeyboardMarkup()
 
@@ -185,6 +203,16 @@ def message_handler(message):
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['QUESTION2'])
 def message_handler(call):
+    """If the bot state for a message/call sender is QUESTION2.
+
+       if call.data is 'done', switch to the SURVEY1 state, send the assigned answer
+       and the 'Create Survey' markup.
+
+       elif call.data is 'next', insert a new row into the questions table,
+       switch to the QUESTION1 state. send the assigned answer.
+
+       elif call.data is 'delete', delete the latest question,
+       switch to the QUESTION1 state. send the assigned answer. """
     bot.answer_callback_query(call.id)
 
     markup = telebot.types.InlineKeyboardMarkup()
@@ -208,6 +236,10 @@ def message_handler(call):
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['COLLECT'])
 def callback_handler(call):
+    """If the bot state for a message/call sender is COLLECT
+
+       if call.data is 'point' or polygon, switch to the 'POINT' or
+       'POLYGON state accordingly, send the proper assigned answer'"""
     bot.answer_callback_query(call.id)
 
     if call.data == 'point':
@@ -222,6 +254,10 @@ def callback_handler(call):
 
 @bot.message_handler(func=lambda message: state.show_state(message) == state.states['POINT'])
 def message_handler(message):
+    """If the bot state for a message/call sender is POINT
+
+       if entered point coordinates are valid, save them, switch to the TRANSIT state,
+       send the assigned answer and 'Yes, No' markup"""
     ans = coord.point_manual(message)
     markup = telebot.types.InlineKeyboardMarkup()
 
@@ -235,6 +271,15 @@ def message_handler(message):
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['POLYGON'])
 def callback_handler(call):
+    """If the bot state for a message/call sender is POLYGON.
+
+       if call.data is 'done' and the number of vertices >= 4,
+       switch to the TRANSIT state, create a POLYGON geometry
+       in the features table, send the assigned answer and the
+       'Yes, No' markup
+
+       elif call.data is done and the number of vertices < 4,
+       send the assigned answer."""
     bot.answer_callback_query(call.id)
 
     markup = telebot.types.InlineKeyboardMarkup()
@@ -252,6 +297,10 @@ def callback_handler(call):
 
 @bot.message_handler(func=lambda message: state.show_state(message) == state.states['POLYGON'])
 def message_handler(message):
+    """If the bot state for a message/call sender is POLYGON.
+
+       If entered vertex coordinates are valid, save them,
+       send the assigned answer and 'Done' markup"""
     ans = coord.polygon_manual(message)
 
     markup = telebot.types.InlineKeyboardMarkup()
@@ -262,6 +311,13 @@ def message_handler(message):
 
 @bot.message_handler(content_types=['location'])
 def location_handler(message):
+    """If the message content type is location.
+
+       if the bot state for a message/call sender is POINT, switch to the Transit state,
+       save the location, send the assigned answer and the 'Yes, No' markup.
+
+       elif the bot state for a message/call sender is POLYGON,
+       save the location, send the assigned answer and the 'Done' markup."""
     ans = answers['COORD_NS']
     markup = telebot.types.InlineKeyboardMarkup()
 
@@ -279,6 +335,11 @@ def location_handler(message):
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['TRANSIT'])
 def callback_handler(call):
+    """If the bot state for a message/call sender is TRANSIT.
+
+       if call.data is 'yes', switch to the MEDIA1 state, send the assigned answer
+
+       elif call.data is 'no', switch to the ANSWER state, send the assigned answer."""
     bot.answer_callback_query(call.id)
 
     if call.data == 'yes':
@@ -293,11 +354,21 @@ def callback_handler(call):
 
 @bot.message_handler(func=lambda message: state.show_state(message) == state.states['MEDIA1'])
 def message_handler(message):
+    """If the bot state for a message/call sender is MEDIA1.
+
+       In the case of a text entry, send the assigned answer."""
     bot.send_message(message.chat.id, answers['INVALID'])
 
 
 @bot.message_handler(content_types=['photo'])
 def photo_handler(message):
+    """If the message content type is photo.
+
+       if the bot state for a message/call sender is MEDIA1, try to get
+       the url of a photo, switch to the MEDIA2 state, save the url,
+       send the assigned answer and the 'Yes, No' markup.
+
+       pass in the case of the psycopg2.ProgrammingError exception """
     ans = answers['PHOTO_NS']
     markup = telebot.types.InlineKeyboardMarkup()
 
@@ -317,6 +388,13 @@ def photo_handler(message):
 
 @bot.message_handler(content_types=['video'])
 def video_handler(message):
+    """If the message content type is video.
+
+       if the bot state for a message/call sender is MEDIA1, try to get
+       the url of a video, switch to the MEDIA2 state, save the url,
+       send the assigned answer and the 'Yes, No' markup.
+
+       pass in the case of the psycopg2.ProgrammingError exception """
     ans = answers['VIDEO_NS']
     markup = telebot.types.InlineKeyboardMarkup()
 
@@ -335,6 +413,11 @@ def video_handler(message):
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['MEDIA2'])
 def callback_handler(call):
+    """If the bot state for a message/call sender is MEDIA2.
+
+       if call.data is 'yes', switch to the MEDIA1 state, send the assigned answer.
+
+       elif call.data is 'no', switch to the ANSWER state, send the assigned answer."""
     bot.answer_callback_query(call.id)
 
     if call.data == 'yes':
@@ -349,6 +432,10 @@ def callback_handler(call):
 
 @bot.message_handler(func=lambda message: state.show_state(message) == state.states['ANSWER'])
 def message_handler(message):
+    """If the bot state for a message/call sender is ANSWER.
+
+       if all questions have been answered, switch to the SUBMIT state, send the
+       proper answer and the 'Submit, Delete' markup."""
     ans = qa.answer_insert(message)
     markup = telebot.types.InlineKeyboardMarkup()
 
@@ -362,6 +449,15 @@ def message_handler(message):
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['CHECK1'])
 def callback_handler(call):
+    """If the bot state for a message/call sender is CHECK1.
+
+       if call.data is 'yes', switch to the SURVEY3 state, delete the latest entry.
+           if a message/call sender is the survey creator, send the assigned answer and
+           the 'View,  Collect, Back>>' markup.
+           else, send the assigned answer and 'Collect, Back>>' markup.
+
+        elif call.data is 'no', switch to the SUBMIT state, send the assigned answer and
+        the 'Submit, Delete' markup."""
     bot.answer_callback_query(call.id)
 
     markup = telebot.types.InlineKeyboardMarkup()
@@ -390,6 +486,13 @@ def callback_handler(call):
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['CHECK2'])
 def callback_handler(call):
+    """If the bot state for a message/call sender is CHECK2.
+
+       if call.data is 'yes', switch to the SURVEY3 state, delete all data,
+       send the assigned answer and the 'View, Collect, Back>>' markup.
+
+       elif call.data is 'no', switch to the RESULT state, send the assigned answer and
+       the 'Map, Shapefile, GeoJSON, Delete, Back>>' markup."""
     bot.answer_callback_query(call.id)
 
     markup = telebot.types.InlineKeyboardMarkup()
@@ -415,6 +518,16 @@ def callback_handler(call):
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['SUBMIT'])
 def callback_handler(call):
+    """If the bot state for a message/call sender is SUBMIT.
+
+       if call.data is 'delete', switch to the CHECK1 state, send the assigned answer
+       and the 'Yes, No' markup
+
+       elif call.data is 'submit', set the answered flag in the features table for
+       the current feature, switch to the RESULT state.
+           if the message/call sender is the survey creator, send the assigned answer
+           and the 'Map, Shapefile, GeoJSON, Back>>' markup.
+           else, send the assigned answer and the 'Back>>' markup."""
     bot.answer_callback_query(call.id)
 
     markup = telebot.types.InlineKeyboardMarkup()
@@ -444,6 +557,20 @@ def callback_handler(call):
 
 @bot.callback_query_handler(func=lambda call: state.show_state(call) == state.states['RESULT'])
 def callback_handler(call):
+    """If the bot state for a message/call sender is RESULT.
+
+       if the message/call sender is the survey creator.
+          if call.data is 'back', switch to the SURVEY3 state, send the assigned answer
+          and the 'View, Collect, Back>>' markup.
+          elif call.data is 'map', 'geojson' or 'shapefile', create and send a Web Map,
+          GeoJSON or Shapefiles respectively.
+          elif call.data is 'delete', switch to the CHECK2 state, send the assigned answer
+          and the 'Yes, No' markup.
+
+       else
+           if call.data is 'back>>, switch to the SURVEY3 state, send the assigned answer
+           and the 'Collect, Back>>' markup."""
+
     bot.answer_callback_query(call.id)
 
     markup = telebot.types.InlineKeyboardMarkup()
@@ -481,4 +608,6 @@ def callback_handler(call):
 
 
 if __name__ == "__main__":
+
+    # Bot polling
     bot.polling()
