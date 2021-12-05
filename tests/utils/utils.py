@@ -5,7 +5,7 @@ from tests.utils.data import Data
 
 class Message(Data):
     """Model the structure of
-    a Telegram message/call."""
+       a Telegram message/call."""
     num = 0
     text = ''
 
@@ -38,7 +38,8 @@ class TestID:
 
 
 class ShpProcess:
-    """Process shp binaries."""
+    """Process shp
+       binaries."""
     def shp_value(self, shp):
         shp['shp'] = shp['shp'].getvalue()
         shp['shx'] = shp['shx'].getvalue()
@@ -55,7 +56,8 @@ class ShpProcess:
 
 
 class MockResponse:
-    """Mock urlopen and post data."""
+    """Mock urlopen and
+       post data."""
     correct = [{'src': 'https://telegra.ph/test_path'}]
     wrong = [{'error': 'https://telegra.ph/test_path'}]
 

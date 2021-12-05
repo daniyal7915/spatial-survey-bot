@@ -24,10 +24,9 @@ pp, webmap, gjson_shp = PointPolygon(), CreateWebMap('test_'), CreateGJsonShp('t
 gjson, shp = GeoJson('test_'), Shp('test_')
 
 
-# Tests, covering all methods in process.py
-
-
 class TestState(TestCase, Message, Result):
+    """Test State class in
+       process.py"""
     def test_states(self):
         self.assertEqual(state.states, self.result_states)
 
@@ -59,6 +58,8 @@ class TestState(TestCase, Message, Result):
 
 
 class SurveyTest(TestCase, Message, Result):
+    """Test Survey class in
+       process.py"""
     def test_save_survey(self):
         self.num = 4
 
@@ -144,6 +145,8 @@ class SurveyTest(TestCase, Message, Result):
 
 
 class PointPolygonTest(TestCase, Data, Result):
+    """Test PointPolygon class in
+       process.py"""
     def test_point(self):
         self.assertEqual(pp.point(self.data_point), self.result_point)
 
@@ -152,6 +155,8 @@ class PointPolygonTest(TestCase, Data, Result):
 
 
 class QuestionAnswerTest(TestCase, Message, Result):
+    """Test QuestionAnswer class in
+       process.py"""
     @mock.patch('engine.process.Survey.get_survey')
     def test_ans_check_(self, get_survey):
         self.num = 10
@@ -316,6 +321,8 @@ class QuestionAnswerTest(TestCase, Message, Result):
 
 
 class CoordTest(TestCase, Message, Result):
+    """Test Coord class in
+       process.py"""
     def test_get_poly_points(self):
         self.num = 18
 
@@ -445,6 +452,8 @@ class CoordTest(TestCase, Message, Result):
 
 
 class MediaTest(TestCase, Message, Result):
+    """Test Media class in
+       process.py"""
     def test_save_media(self):
         self.num = 25
 
@@ -508,13 +517,15 @@ class MediaTest(TestCase, Message, Result):
 
 
 class CreateWebMapTest(TestCase, SetTestData, Result):
+    """Test CreateWebMap in
+       process.py"""
     @mock.patch('engine.process.PointPolygon.polygon')
     @mock.patch('engine.process.PointPolygon.point')
     @mock.patch('engine.process.Survey.get_survey')
     def test_source(self, get_survey, point, polygon):
         self.num = 26
 
-        self.set_test_data()
+        self.set_test_data()  # set test data
 
         polygon.side_effect = self.data_double_polygon
         point.side_effect = self.data_double_point
@@ -525,7 +536,7 @@ class CreateWebMapTest(TestCase, SetTestData, Result):
     def test_geom_extent(self):
         self.num = 29
 
-        self.set_test_data()
+        self.set_test_data()  # set test data
 
         self.assertEqual(webmap.geom_extent(f"'{self.message.survey}'"), self.result_extent)
 
@@ -539,7 +550,7 @@ class CreateWebMapTest(TestCase, SetTestData, Result):
     def test_adjust(self, get_survey, map_center):
         self.num = 32
 
-        self.set_test_data()
+        self.set_test_data()  # set test data
 
         map_center.side_effect = self.data_triple_map_center
         get_survey.return_value = self.message.survey
@@ -583,11 +594,13 @@ class CreateWebMapTest(TestCase, SetTestData, Result):
 
 
 class CreateGJsonShpTest(TestCase, SetTestData, Result):
+    """Test CreateGJsonShp class in
+       process.py"""
     @mock.patch('engine.process.Survey.get_survey')
     def test_ques_ans(self, get_survey):
         self.num = 38
 
-        self.set_test_data()
+        self.set_test_data()  # set test data
 
         get_survey.return_value = self.message.survey
 
@@ -610,13 +623,15 @@ class CreateGJsonShpTest(TestCase, SetTestData, Result):
 
 
 class GeoJsonTest(TestCase, SetTestData, Result):
+    """Test GeoJson class in
+       process.py"""
     @mock.patch('engine.process.PointPolygon.polygon')
     @mock.patch('engine.process.PointPolygon.point')
     @mock.patch('engine.process.Survey.get_survey')
     def test_gjson(self, get_survey, point, polygon):
         self.num = 44
 
-        self.set_test_data()
+        self.set_test_data()  # set test data
 
         polygon.side_effect = self.data_quad_polygon
         point.side_effect = self.data_quad_point
@@ -640,13 +655,15 @@ class GeoJsonTest(TestCase, SetTestData, Result):
 
 
 class ShpTest(TestCase, SetTestData, ShpProcess, Result):
+    """Test Shp class in
+       process.py"""
     @mock.patch('engine.process.PointPolygon.polygon')
     @mock.patch('engine.process.PointPolygon.point')
     @mock.patch('engine.process.Survey.get_survey')
     def test_shp(self, get_survey, point, polygon):
         self.num = 50
 
-        self.set_test_data()
+        self.set_test_data()  # set test data
 
         polygon.side_effect = self.data_quad_polygon
         point.side_effect = self.data_quad_point
@@ -680,6 +697,8 @@ class ShpTest(TestCase, SetTestData, ShpProcess, Result):
 
 
 class DeleteTest(TestCase, Message, Result):
+    """Test Delete class in
+       process.py"""
     @mock.patch('engine.process.Survey.get_survey')
     def test_del_question(self, get_survey):
         self.num = 54
